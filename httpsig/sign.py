@@ -24,6 +24,10 @@ class Signer(object):
             algorithm = DEFAULT_SIGN_ALGORITHM
 
         assert algorithm in ALGORITHMS, "Unknown algorithm"
+
+        if algorithm != DEFAULT_SIGN_ALGORITHM:
+            print("Algorithm: {} is deprecated please update to {}".format(algorithm, DEFAULT_SIGN_ALGORITHM))
+
         if isinstance(secret, six.string_types):
             secret = secret.encode("ascii")
 
