@@ -11,7 +11,7 @@ class TestUtils(unittest.TestCase):
 
     def test_get_fingerprint(self):
         with open(os.path.join(
-                os.path.dirname(__file__), 'rsa_public.pem'), 'r') as k:
+                os.path.dirname(__file__), 'rsa_public_1024.pem'), 'r') as k:
             key = k.read()
         fingerprint = get_fingerprint(key)
         self.assertEqual(
