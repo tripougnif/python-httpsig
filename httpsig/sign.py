@@ -10,6 +10,7 @@ from .utils import *
 
 
 DEFAULT_SIGN_ALGORITHM = "hs2019"
+DEFAULT_SALT_LENGTH = 20
 
 
 class Signer(object):
@@ -19,9 +20,11 @@ class Signer(object):
 
     Password-protected keyfiles are not supported.
     """
-    def __init__(self, secret, algorithm=None, sign_algorithm=None):
+    def __init__(self, secret, algorithm=None, sign_algorithm=None, salt_length=None):
         if algorithm is None:
             algorithm = DEFAULT_SIGN_ALGORITHM
+        if salt_length is None:
+            salt_length = DEFAULT_SALT_LENGTH
 
         assert algorithm in ALGORITHMS, "Unknown algorithm"
         assert sign_algorithm is None or sign_algorithm in SIGN_ALGORITHMS, "Unsupported digital signature algorithm"
@@ -58,7 +61,7 @@ class Signer(object):
         elif self.sign_algorithm == "PSS":
             try:
                 rsa_key = RSA.importKey(secret)
-                self._rsa = PKCS1_PSS.new(rsa_key)
+                self._rsa = PKCS1_PSS.new(rsa_key, saltLen=salt_length)
                 self._hash = HASHES[self.hash_algorithm]
             except ValueError:
                 raise HttpSigException("Invalid key.")
@@ -100,18 +103,19 @@ class HeaderSigner(Signer):
         to use
     :arg secret:    a PEM-encoded RSA private key or an HMAC secret (must
         match the algorithm)
-    :arg algorithm: one of the seven specified algorithms
-    :arg sign_algorithm: required for 'hs2019' algorithm. Sign algorithm for the secret
-    :arg headers:   a list of http headers to be included in the signing
+    :param algorithm: one of the seven specified algorithms
+    :param sign_algorithm: required for 'hs2019' algorithm. Sign algorithm for the secret
+    :param sign_algorithm:      Custom salt length for 'hs2019' and 'PSS' sign algorithm.
+    :param headers:   a list of http headers to be included in the signing
         string, defaulting to ['date'].
-    :arg sign_header: header used to include signature, defaulting to
+    :param sign_header: header used to include signature, defaulting to
        'authorization'.
     """
-    def __init__(self, key_id, secret, algorithm=None, sign_algorithm=None, headers=None, sign_header='authorization'):
+    def __init__(self, key_id, secret, algorithm=None, sign_algorithm=None, salt_length=None, headers=None, sign_header='authorization'):
         if algorithm is None:
             algorithm = DEFAULT_SIGN_ALGORITHM
 
-        super(HeaderSigner, self).__init__(secret=secret, algorithm=algorithm, sign_algorithm=sign_algorithm)
+        super(HeaderSigner, self).__init__(secret=secret, algorithm=algorithm, sign_algorithm=sign_algorithm, salt_length=salt_length)
         self.headers = headers or ['date']
         self.signature_template = build_signature_template(
                                     key_id, algorithm, headers, sign_header)

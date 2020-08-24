@@ -52,7 +52,7 @@ class HeaderVerifier(Verifier):
     """
 
     def __init__(self, headers, secret, required_headers=None, method=None,
-                 path=None, host=None, sign_header='authorization', sign_algorithm=None):
+                 path=None, host=None, sign_header='authorization', sign_algorithm=None, salt_length=None):
         """
         Instantiate a HeaderVerifier object.
 
@@ -73,6 +73,7 @@ class HeaderVerifier(Verifier):
             Default is 'authorization'.
         :param sign_algorithm:      Required for 'hs2019' algorithm, specifies the
                                     digital signature algorithm (derived from keyId) to use.
+        :param sign_algorithm:      Custom salt length for 'hs2019' and 'PSS' sign algorithm.
         """
         required_headers = required_headers or ['date']
         self.headers = CaseInsensitiveDict(headers)
@@ -93,11 +94,11 @@ class HeaderVerifier(Verifier):
 
         if self.auth_dict['algorithm'] != DEFAULT_SIGN_ALGORITHM:
             print("Algorithm: {} is deprecated please update to {}".format(self.auth_dict['algorithm'], DEFAULT_SIGN_ALGORITHM))
-        elif self.auth_dict['algorithm'] == DEFAULT_SIGN_ALGORITHM and self.sign_algorithm is None:
+        elif self.auth_dict['algorithm'] == DEFAULT_SIGN_ALGORITHM and sign_algorithm is None:
             raise HttpSigException("Required sign algorithm for {} algorithm not set".format(DEFAULT_SIGN_ALGORITHM))
 
         super(HeaderVerifier, self).__init__(
-                secret, algorithm=self.auth_dict['algorithm'], sign_algorithm=sign_algorithm)
+                secret, algorithm=self.auth_dict['algorithm'], sign_algorithm=sign_algorithm, salt_length=salt_length)
 
     def verify(self):
         """
