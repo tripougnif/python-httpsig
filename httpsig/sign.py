@@ -19,12 +19,12 @@ class Signer(object):
 
     Password-protected keyfiles are not supported.
     """
-    def __init__(self, secret, algorithm=None, digital_signature_algorithm=None):
+    def __init__(self, secret, algorithm=None, sign_algorithm=None):
         if algorithm is None:
             algorithm = DEFAULT_SIGN_ALGORITHM
 
         assert algorithm in ALGORITHMS, "Unknown algorithm"
-        assert digital_signature_algorithm in DIGITAL_SIGNATURE_ALGORITHMS, "Unsupported digital signature algrotihm"
+        assert sign_algorithm in SIGN_ALGORITHMS, "Unsupported digital signature algrotihm"
 
         if algorithm != DEFAULT_SIGN_ALGORITHM:
             print("Algorithm: {} is deprecated please update to {}".format(algorithm, DEFAULT_SIGN_ALGORITHM))
@@ -39,8 +39,8 @@ class Signer(object):
         if "-" in algorithm:
             self.sign_algorithm, self.hash_algorithm = algorithm.split('-')
         elif algorithm == "hs2019":
-            assert digital_signature_algorithm is not None, "Required digital signature algorithm not specified"
-            self.sign_algorithm = digital_signature_algorithm
+            assert sign_algorithm is not None, "Required digital signature algorithm not specified"
+            self.sign_algorithm = sign_algorithm
             self.hash_algorithm = "sha512"
 
         if self.sign_algorithm == 'rsa':
@@ -106,8 +106,8 @@ class HeaderSigner(Signer):
     :arg sign_header: header used to include signature, defaulting to
        'authorization'.
     """
-    def __init__(self, key_id, secret, algorithm=None, headers=None, sign_header='authorization'):
-        super(HeaderSigner, self).__init__(secret=secret, algorithm=algorithm)
+    def __init__(self, key_id, secret, algorithm=None, sign_algorithm=None, headers=None, sign_header='authorization'):
+        super(HeaderSigner, self).__init__(secret=secret, algorithm=algorithm, sign_algorithm=sign_algorithm)
         self.headers = headers or ['date']
         self.signature_template = build_signature_template(
                                     key_id, algorithm, headers, sign_header)
