@@ -100,7 +100,8 @@ class HeaderSigner(Signer):
         to use
     :arg secret:    a PEM-encoded RSA private key or an HMAC secret (must
         match the algorithm)
-    :arg algorithm: one of the six specified algorithms
+    :arg algorithm: one of the seven specified algorithms
+    :arg sign_algorithm: required for 'hs2019' algorithm. Sign algorithm for the secret
     :arg headers:   a list of http headers to be included in the signing
         string, defaulting to ['date'].
     :arg sign_header: header used to include signature, defaulting to
