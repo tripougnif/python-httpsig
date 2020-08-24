@@ -19,11 +19,12 @@ class Signer(object):
 
     Password-protected keyfiles are not supported.
     """
-    def __init__(self, secret, algorithm=None):
+    def __init__(self, secret, algorithm=None, digital_signature_algorithm=None):
         if algorithm is None:
             algorithm = DEFAULT_SIGN_ALGORITHM
 
         assert algorithm in ALGORITHMS, "Unknown algorithm"
+        assert digital_signature_algorithm in DIGITAL_SIGNATURE_ALGORITHMS, "Unsupported digital signature algrotihm"
 
         if algorithm != DEFAULT_SIGN_ALGORITHM:
             print("Algorithm: {} is deprecated please update to {}".format(algorithm, DEFAULT_SIGN_ALGORITHM))
@@ -33,7 +34,13 @@ class Signer(object):
 
         self._rsa = None
         self._hash = None
-        self.sign_algorithm, self.hash_algorithm = algorithm.split('-')
+
+        if "-" in algorithm:
+            self.sign_algorithm, self.hash_algorithm = algorithm.split('-')
+        elif algorithm == "hs2019":
+            assert digital_signature_algorithm is not None, "Required digital signature algorithm not specified"
+            self.sign_algorithm = digital_signature_algorithm
+            self.hash_algorithm = "sha512"
 
         if self.sign_algorithm == 'rsa':
             try:
@@ -46,6 +53,15 @@ class Signer(object):
         elif self.sign_algorithm == 'hmac':
             self._hash = HMAC.new(secret,
                                   digestmod=HASHES[self.hash_algorithm])
+
+        elif self.sign_algorithm == "PSS":
+            try:
+                rsa_key = RSA.importKey(secret)
+                self._rsa = PKCS1_PSS.new(rsa_key)
+                self._hash = HASHES[self.hash_algorithm]
+            except ValueError:
+                raise HttpSigException("Invalid key.")
+
 
     @property
     def algorithm(self):

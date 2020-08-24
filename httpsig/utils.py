@@ -25,6 +25,10 @@ HASHES = {'sha1':   SHA,
           'sha256': SHA256,
           'sha512': SHA512}
 
+DIGITAL_SIGNATURE_ALGORITHMS = frozenset([
+    "PSS"
+])
+
 
 class HttpSigException(Exception):
     pass
