@@ -4,11 +4,12 @@ import six
 from Crypto.Hash import HMAC
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_v1_5
+from Crypto.Signature import PKCS1_PSS
 
 from .utils import *
 
 
-DEFAULT_SIGN_ALGORITHM = "hmac-sha256"
+DEFAULT_SIGN_ALGORITHM = "hs2019"
 
 
 class Signer(object):
