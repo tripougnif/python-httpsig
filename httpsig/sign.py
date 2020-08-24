@@ -107,9 +107,6 @@ class HeaderSigner(Signer):
        'authorization'.
     """
     def __init__(self, key_id, secret, algorithm=None, headers=None, sign_header='authorization'):
-        if algorithm is None:
-            algorithm = DEFAULT_SIGN_ALGORITHM
-
         super(HeaderSigner, self).__init__(secret=secret, algorithm=algorithm)
         self.headers = headers or ['date']
         self.signature_template = build_signature_template(
