@@ -34,6 +34,7 @@ class Signer(object):
 
         self._rsa = None
         self._hash = None
+        self.algorithm = algorithm
 
         if "-" in algorithm:
             self.sign_algorithm, self.hash_algorithm = algorithm.split('-')
@@ -61,11 +62,6 @@ class Signer(object):
                 self._hash = HASHES[self.hash_algorithm]
             except ValueError:
                 raise HttpSigException("Invalid key.")
-
-
-    @property
-    def algorithm(self):
-        return '%s-%s' % (self.sign_algorithm, self.hash_algorithm)
 
     def _sign_rsa(self, data):
         if isinstance(data, six.string_types):
