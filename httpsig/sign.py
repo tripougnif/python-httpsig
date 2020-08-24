@@ -24,7 +24,7 @@ class Signer(object):
             algorithm = DEFAULT_SIGN_ALGORITHM
 
         assert algorithm in ALGORITHMS, "Unknown algorithm"
-        assert sign_algorithm in SIGN_ALGORITHMS, "Unsupported digital signature algrotihm"
+        assert sign_algorithm is None or sign_algorithm in SIGN_ALGORITHMS, "Unsupported digital signature algorithm"
 
         if algorithm != DEFAULT_SIGN_ALGORITHM:
             print("Algorithm: {} is deprecated please update to {}".format(algorithm, DEFAULT_SIGN_ALGORITHM))
