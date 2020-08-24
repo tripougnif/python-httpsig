@@ -10,7 +10,7 @@ from .utils import *
 
 
 DEFAULT_SIGN_ALGORITHM = "hs2019"
-DEFAULT_SALT_LENGTH = 20
+DEFAULT_SALT_LENGTH = None
 
 
 class Signer(object):
