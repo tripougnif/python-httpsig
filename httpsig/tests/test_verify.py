@@ -258,3 +258,73 @@ class TestVerifyHS2019PSS(TestVerifyHMACSHA1):
         self.sign_secret = private_key
         self.verify_secret = public_key
         self.sign_algorithm = PSS(salt_length=0)
+
+
+class TestSignAndVerify(unittest.TestCase):
+    header_date = 'Thu, 05 Jan 2014 21:31:40 GMT'
+    sign_header = 'authorization'
+
+    def setUp(self):
+        with open(os.path.join(os.path.dirname(__file__), 'rsa_private_1024.pem'), 'rb') as f:
+            self.private_key = f.read()
+
+        with open(os.path.join(os.path.dirname(__file__), 'rsa_public_1024.pem'), 'rb') as f:
+            self.public_key = f.read()
+
+        with open(os.path.join(os.path.dirname(__file__), 'rsa_private_2048.pem'), 'rb') as f:
+            self.other_private_key = f.read()
+
+        with open(os.path.join(os.path.dirname(__file__), 'rsa_public_2048.pem'), 'rb') as f:
+            self.other_public_key = f.read()
+
+    def test_default(self):
+        unsigned = {
+            'Date': self.header_date
+        }
+
+        hs = HeaderSigner(
+            key_id="Test", secret=self.private_key, algorithm='rsa-sha1',
+            sign_header=self.sign_header)
+        signed = hs.sign(unsigned)
+        hv = HeaderVerifier(
+            headers=signed, secret=self.public_key, sign_header=self.sign_header)
+        self.assertTrue(hv.verify())
+
+    def test_other_default(self):
+        unsigned = {
+            'Date': self.header_date
+        }
+
+        hs = HeaderSigner(
+            key_id="Test", secret=self.other_private_key, algorithm='rsa-sha256',
+            sign_header=self.sign_header)
+        signed = hs.sign(unsigned)
+        hv = HeaderVerifier(
+            headers=signed, secret=self.other_public_key, sign_header=self.sign_header)
+        self.assertTrue(hv.verify())
+
+    def test_mix_default_1_256(self):
+        unsigned = {
+            'Date': self.header_date
+        }
+
+        hs = HeaderSigner(
+            key_id="Test", secret=self.private_key, algorithm='rsa-sha1',
+            sign_header=self.sign_header)
+        signed = hs.sign(unsigned)
+        hv = HeaderVerifier(
+            headers=signed, secret=self.other_public_key, sign_header=self.sign_header)
+        self.assertFalse(hv.verify())
+
+    def test_mix_default_256_1(self):
+        unsigned = {
+            'Date': self.header_date
+        }
+
+        hs = HeaderSigner(
+            key_id="Test", secret=self.other_private_key, algorithm='rsa-sha256',
+            sign_header=self.sign_header)
+        signed = hs.sign(unsigned)
+        hv = HeaderVerifier(
+            headers=signed, secret=self.public_key, sign_header=self.sign_header)
+        self.assertFalse(hv.verify())

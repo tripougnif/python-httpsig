@@ -53,6 +53,25 @@ class TestSign(unittest.TestCase):
         self.assertEqual(params['algorithm'], 'hs2019')
         self.assertEqual(params['signature'], 'T8+Cj3Zp2cBDm2r8/loPgfHUSSFXXyZJNxxbNx1NvKVz/r5T4z6pVxhl9rqk8WfYHMdlh2aT5hCrYKvhs88Jy0DDmeUP4nELWRsO1BF0oAqHfcrbEikZQL7jA6z0guVaLr0S5QRGmd1K5HUEkP/vYEOns+FRL+JrFG4dNJNESvG5iyKUoaXfoZCFdqtzLlIteEAL7dW/kaX/dE116wfpbem1eCABuGopRhuFtjqLKVjuUVwyP/zSYTqd9j+gDhinkAifTJPxbGMh0b5LZdNCqw5irT9NkTcTFRXDp8ioX8r805Z9QhjT7H+rSo350U2LsAFoQ9ttryPBOoMPCiQTlw==')  # noqa: E501
 
+    def test_other_default(self):
+        hs = sign.HeaderSigner(key_id='Test', secret=self.key_1024, sign_algorithm=PSS(hash_algorithm="sha512", salt_length=0))
+        unsigned = {
+            'Date': self.header_date
+        }
+        signed = hs.sign(unsigned)
+        self.assertIn('Date', signed)
+        self.assertEqual(unsigned['Date'], signed['Date'])
+        self.assertIn('Authorization', signed)
+        auth = parse_authorization_header(signed['authorization'])
+        params = auth[1]
+        self.assertIn('keyId', params)
+        self.assertIn('algorithm', params)
+        self.assertIn('signature', params)
+        self.assertEqual(params['keyId'], 'Test')
+        self.assertEqual(params['algorithm'], 'hs2019')
+        self.assertEqual(params['signature'],
+                         'Gw8FOaXNxqwJHXwJ30OKiMFpK5zP916CFtzK7/biKi9NppjGAlpUfFKqp5kK+bFRyXxqUzQ1x5cbSeFzRWnqodNNO60ApYbOVD7ePqJfZ3DJFAxYOMzoECzc+lyVskSHKC0Ue8aYiV66gXTuY7hrEIqUsK3To/DhSNgO8csdzwg=')
+
     def test_basic(self):
         hs = sign.HeaderSigner(key_id='Test', secret=self.key_2048, sign_algorithm=PSS(salt_length=0), headers=[
             '(request-target)',
