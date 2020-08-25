@@ -51,7 +51,7 @@ class HeaderVerifier(Verifier):
     """
 
     def __init__(self, headers, secret, required_headers=None, method=None,
-                 path=None, host=None, sign_header='authorization', sign_algorithm=None, salt_length=None):
+                 path=None, host=None, sign_header='authorization', sign_algorithm=None):
         """
         Instantiate a HeaderVerifier object.
 
