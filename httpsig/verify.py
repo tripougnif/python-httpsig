@@ -4,7 +4,7 @@ Module to assist in verifying a signed header.
 import base64
 import six
 
-from .sign import Signer, DEFAULT_SIGN_ALGORITHM
+from .sign import Signer, DEFAULT_ALGORITHM
 from .sign_algorithms import SignAlgorithm
 from .utils import *
 
@@ -90,10 +90,10 @@ class HeaderVerifier(Verifier):
         self.path = path
         self.host = host
 
-        if self.auth_dict['algorithm'] != DEFAULT_SIGN_ALGORITHM:
-            print("Algorithm: {} is deprecated please update to {}".format(self.auth_dict['algorithm'], DEFAULT_SIGN_ALGORITHM))
-        elif self.auth_dict['algorithm'] == DEFAULT_SIGN_ALGORITHM and sign_algorithm is None:
-            raise HttpSigException("Required sign algorithm for {} algorithm not set".format(DEFAULT_SIGN_ALGORITHM))
+        if self.auth_dict['algorithm'] != DEFAULT_ALGORITHM:
+            print("Algorithm: {} is deprecated please update to {}".format(self.auth_dict['algorithm'], DEFAULT_ALGORITHM))
+        elif self.auth_dict['algorithm'] == DEFAULT_ALGORITHM and sign_algorithm is None:
+            raise HttpSigException("Required sign algorithm for {} algorithm not set".format(DEFAULT_ALGORITHM))
 
         super(HeaderVerifier, self).__init__(
                 secret, algorithm=self.auth_dict['algorithm'], sign_algorithm=sign_algorithm)

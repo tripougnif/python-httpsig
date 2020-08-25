@@ -8,7 +8,7 @@ from Crypto.Signature import PKCS1_v1_5
 from .sign_algorithms import SignAlgorithm
 from .utils import *
 
-DEFAULT_SIGN_ALGORITHM = "hs2019"
+DEFAULT_ALGORITHM = "hs2019"
 
 
 class Signer(object):
@@ -21,15 +21,15 @@ class Signer(object):
 
     def __init__(self, secret, algorithm=None, sign_algorithm=None):
         if algorithm is None:
-            algorithm = DEFAULT_SIGN_ALGORITHM
+            algorithm = DEFAULT_ALGORITHM
 
         assert algorithm in ALGORITHMS, "Unknown algorithm"
 
         if sign_algorithm is not None and not issubclass(type(sign_algorithm), SignAlgorithm):
             raise HttpSigException("Unsupported digital signature algorithm")
 
-        if algorithm != DEFAULT_SIGN_ALGORITHM:
-            print("Algorithm: {} is deprecated please update to {}".format(algorithm, DEFAULT_SIGN_ALGORITHM))
+        if algorithm != DEFAULT_ALGORITHM:
+            print("Algorithm: {} is deprecated please update to {}".format(algorithm, DEFAULT_ALGORITHM))
 
         if isinstance(secret, six.string_types):
             secret = secret.encode("ascii")
@@ -106,7 +106,7 @@ class HeaderSigner(Signer):
 
     def __init__(self, key_id, secret, algorithm=None, sign_algorithm=None, headers=None, sign_header='authorization'):
         if algorithm is None:
-            algorithm = DEFAULT_SIGN_ALGORITHM
+            algorithm = DEFAULT_ALGORITHM
 
         super(HeaderSigner, self).__init__(secret=secret, algorithm=algorithm, sign_algorithm=sign_algorithm)
         self.headers = headers or ['date']

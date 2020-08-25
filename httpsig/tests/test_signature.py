@@ -12,7 +12,7 @@ from httpsig.utils import parse_authorization_header, HttpSigException
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-sign.DEFAULT_SIGN_ALGORITHM = "hs2019"
+sign.DEFAULT_ALGORITHM = "hs2019"
 
 
 class TestSign(unittest.TestCase):
