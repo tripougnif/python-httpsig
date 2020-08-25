@@ -1,16 +1,14 @@
+from __future__ import print_function
 import base64
 import six
 
 from Crypto.Hash import HMAC
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_v1_5
-from Crypto.Signature import PKCS1_PSS
-
+from .sign_algorithms import SIGN_ALGORITHMS
 from .utils import *
 
-
 DEFAULT_SIGN_ALGORITHM = "hs2019"
-DEFAULT_SALT_LENGTH = None
 
 
 class Signer(object):
@@ -20,14 +18,15 @@ class Signer(object):
 
     Password-protected keyfiles are not supported.
     """
-    def __init__(self, secret, algorithm=None, sign_algorithm=None, salt_length=None):
+
+    def __init__(self, secret, algorithm=None, sign_algorithm=None):
         if algorithm is None:
             algorithm = DEFAULT_SIGN_ALGORITHM
-        if salt_length is None:
-            salt_length = DEFAULT_SALT_LENGTH
 
         assert algorithm in ALGORITHMS, "Unknown algorithm"
-        assert sign_algorithm is None or sign_algorithm in SIGN_ALGORITHMS, "Unsupported digital signature algorithm"
+
+        if sign_algorithm is not None and sign_algorithm.__class__.__name__ not in SIGN_ALGORITHMS:
+            raise HttpSigException("Unsupported digital signature algorithm")
 
         if algorithm != DEFAULT_SIGN_ALGORITHM:
             print("Algorithm: {} is deprecated please update to {}".format(algorithm, DEFAULT_SIGN_ALGORITHM))
@@ -38,13 +37,13 @@ class Signer(object):
         self._rsa = None
         self._hash = None
         self.algorithm = algorithm
+        self.secret = secret
 
         if "-" in algorithm:
             self.sign_algorithm, self.hash_algorithm = algorithm.split('-')
         elif algorithm == "hs2019":
             assert sign_algorithm is not None, "Required digital signature algorithm not specified"
             self.sign_algorithm = sign_algorithm
-            self.hash_algorithm = "sha512"
 
         if self.sign_algorithm == 'rsa':
             try:
@@ -57,14 +56,6 @@ class Signer(object):
         elif self.sign_algorithm == 'hmac':
             self._hash = HMAC.new(secret,
                                   digestmod=HASHES[self.hash_algorithm])
-
-        elif self.sign_algorithm == "PSS":
-            try:
-                rsa_key = RSA.importKey(secret)
-                self._rsa = PKCS1_PSS.new(rsa_key, saltLen=salt_length)
-                self._hash = HASHES[self.hash_algorithm]
-            except ValueError:
-                raise HttpSigException("Invalid key.")
 
     def _sign_rsa(self, data):
         if isinstance(data, six.string_types):
@@ -88,6 +79,8 @@ class Signer(object):
             signed = self._sign_rsa(data)
         elif self._hash:
             signed = self._sign_hmac(data)
+        elif self.sign_algorithm.__class__.__name__ in SIGN_ALGORITHMS:
+            signed = self.sign_algorithm.sign(self.secret, data)
         if not signed:
             raise SystemError('No valid encryptor found.')
         return base64.b64encode(signed).decode("ascii")
@@ -111,14 +104,15 @@ class HeaderSigner(Signer):
     :param sign_header: header used to include signature, defaulting to
        'authorization'.
     """
-    def __init__(self, key_id, secret, algorithm=None, sign_algorithm=None, salt_length=None, headers=None, sign_header='authorization'):
+
+    def __init__(self, key_id, secret, algorithm=None, sign_algorithm=None, headers=None, sign_header='authorization'):
         if algorithm is None:
             algorithm = DEFAULT_SIGN_ALGORITHM
 
-        super(HeaderSigner, self).__init__(secret=secret, algorithm=algorithm, sign_algorithm=sign_algorithm, salt_length=salt_length)
+        super(HeaderSigner, self).__init__(secret=secret, algorithm=algorithm, sign_algorithm=sign_algorithm)
         self.headers = headers or ['date']
         self.signature_template = build_signature_template(
-                                    key_id, algorithm, headers, sign_header)
+            key_id, algorithm, headers, sign_header)
         self.sign_header = sign_header
 
     def sign(self, headers, host=None, method=None, path=None):
@@ -134,7 +128,7 @@ class HeaderSigner(Signer):
         headers = CaseInsensitiveDict(headers)
         required_headers = self.headers or ['date']
         signable = generate_message(
-                    required_headers, headers, host, method, path)
+            required_headers, headers, host, method, path)
 
         signature = super(HeaderSigner, self).sign(signable)
         headers[self.sign_header] = self.signature_template % signature

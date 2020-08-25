@@ -5,6 +5,7 @@ import base64
 import six
 
 from .sign import Signer, DEFAULT_SIGN_ALGORITHM
+from .sign_algorithms import SIGN_ALGORITHMS
 from .utils import *
 
 
@@ -37,10 +38,8 @@ class Verifier(Signer):
             s = base64.b64decode(signature)
             return ct_bytes_compare(h, s)
 
-        elif self.sign_algorithm == 'PSS':
-            h = self._hash.new()
-            h.update(data)
-            return self._rsa.verify(h, base64.b64decode(signature))
+        elif self.sign_algorithm.__class__.__name__ in SIGN_ALGORITHMS:
+            return self.sign_algorithm.verify(self.secret, data, signature)
 
         else:
             raise HttpSigException("Unsupported algorithm.")
@@ -98,7 +97,7 @@ class HeaderVerifier(Verifier):
             raise HttpSigException("Required sign algorithm for {} algorithm not set".format(DEFAULT_SIGN_ALGORITHM))
 
         super(HeaderVerifier, self).__init__(
-                secret, algorithm=self.auth_dict['algorithm'], sign_algorithm=sign_algorithm, salt_length=salt_length)
+                secret, algorithm=self.auth_dict['algorithm'], sign_algorithm=sign_algorithm)
 
     def verify(self):
         """
