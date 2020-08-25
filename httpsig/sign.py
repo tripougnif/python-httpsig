@@ -79,7 +79,7 @@ class Signer(object):
             signed = self._sign_rsa(data)
         elif self._hash:
             signed = self._sign_hmac(data)
-        elif isinstance(self.sign_algorithm, SignAlgorithm):
+        elif issubclass(type(self.sign_algorithm), SignAlgorithm):
             signed = self.sign_algorithm.sign(self.secret, data)
         if not signed:
             raise SystemError('No valid encryptor found.')
