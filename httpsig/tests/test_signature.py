@@ -28,6 +28,11 @@ class TestSign(unittest.TestCase):
         with open(self.key_path, 'rb') as f:
             self.key = f.read()
 
+        self.other_key_path = os.path.join(
+            os.path.dirname(__file__), 'rsa_private_2.pem')
+        with open(self.other_key_path, 'rb') as f:
+            self.other_key = f.read()
+
     def test_default(self):
         hs = sign.HeaderSigner(key_id='Test', secret=self.key)
         unsigned = {
@@ -45,6 +50,25 @@ class TestSign(unittest.TestCase):
         self.assertEqual(params['keyId'], 'Test')
         self.assertEqual(params['algorithm'], 'rsa-sha256')
         self.assertEqual(params['signature'], 'jKyvPcxB4JbmYY4mByyBY7cZfNl4OW9HpFQlG7N4YcJPteKTu4MWCLyk+gIr0wDgqtLWf9NLpMAMimdfsH7FSWGfbMFSrsVTHNTk0rK3usrfFnti1dxsM4jl0kYJCKTGI/UWkqiaxwNiKqGcdlEDrTcUhhsFsOIo8VhddmZTZ8w=')  # noqa: E501
+
+    def test_other_default(self):
+        hs = sign.HeaderSigner(key_id='Test', secret=self.other_key)
+        unsigned = {
+            'Date': self.header_date
+        }
+        signed = hs.sign(unsigned)
+        self.assertIn('Date', signed)
+        self.assertEqual(unsigned['Date'], signed['Date'])
+        self.assertIn('Authorization', signed)
+        auth = parse_authorization_header(signed['authorization'])
+        params = auth[1]
+        self.assertIn('keyId', params)
+        self.assertIn('algorithm', params)
+        self.assertIn('signature', params)
+        self.assertEqual(params['keyId'], 'Test')
+        self.assertEqual(params['algorithm'], 'rsa-sha256')
+        self.assertEqual(params['signature'],
+                         'GY3Yyuj92xScIb2QbDUWxIW/fg7ZP8rxURltbpouTGxTo+ZRDHO9BbfN6YQeP1Z0VJBEA0dgynuzQs2bVBJavTcoEgvttzznAIj9ypfI6n35Uzeid+9gepa0pfBom6qnoNbblMNsHt7hXBfrpe5EwfEKmpqZgivjJZ53p9gD1NAhlioty/m1MFu1J5wEjpgX466R2PmR10yl22rMcv3mbEPV5ijqLTViDW18DchLyHR+fItzRtor2yLv7QgBSw+gVJu0dVeKeL9kwPxsaurzODgYsFsjZOJvuP9nKPJOdH3PI6eDhpfwjmwhjbSTte3bjkbw0w5tlWuA8m5l1gzyBQ==')
 
     def test_basic(self):
         hs = sign.HeaderSigner(key_id='Test', secret=self.key, headers=[
