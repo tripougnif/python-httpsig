@@ -130,8 +130,9 @@ class TestVerifyHMACSHA1(BaseTestCase):
                             required_headers=["some-other-header"],
                             host=HOST, method=METHOD, path=PATH,
                             sign_header=self.sign_header)
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError) as e:
             hv.verify()
+        self.assertEqual(str(e.exception), 'some-other-header is a required header(s)')
 
     def test_extra_auth_headers(self):
         HOST = "example.com"
@@ -165,6 +166,21 @@ class TestVerifyHMACSHA1(BaseTestCase):
                 sign_header=self.sign_header,
                 required_headers=['date', '(request-target)'])
         self.assertTrue(hv.verify())
+
+    def test_empty_secret(self):
+        with self.assertRaises(ValueError) as e:
+            HeaderVerifier(secret='', headers={})
+        self.assertEqual(str(e.exception), 'secret cant be empty')
+
+    def test_none_secret(self):
+        with self.assertRaises(ValueError) as e:
+            HeaderVerifier(secret=None, headers={})
+        self.assertEqual(str(e.exception), 'secret cant be empty')
+
+    def test_huge_secret(self):
+        with self.assertRaises(ValueError) as e:
+            HeaderVerifier(secret='x' * 1000000, headers={})
+        self.assertEqual(str(e.exception), 'secret cant be larger than 100000 chars')
 
 
 class TestVerifyHMACSHA256(TestVerifyHMACSHA1):

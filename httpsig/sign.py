@@ -93,6 +93,18 @@ class HeaderSigner(Signer):
         if algorithm is None:
             algorithm = DEFAULT_SIGN_ALGORITHM
 
+        if not key_id:
+            raise ValueError("key_id can't be empty")
+
+        if len(key_id) > 100000:
+            raise ValueError("key_id cant be larger than 100000 chars")
+
+        if not secret:
+            raise ValueError("secret can't be empty")
+
+        if len(secret) > 100000:
+            raise ValueError("secret cant be larger than 100000 chars")
+
         super(HeaderSigner, self).__init__(secret=secret, algorithm=algorithm)
         self.headers = headers or ['date']
         self.signature_template = build_signature_template(
