@@ -21,11 +21,11 @@ class HTTPSignatureAuth(requests.auth.AuthBase):
       headers is a list of http headers to be included in the signing string,
       defaulting to "Date" alone.
     """
-    def __init__(self, key_id='', secret='', algorithm=None, headers=None):
+    def __init__(self, key_id='', secret='', algorithm=None, sign_algorithm=None, headers=None):
         headers = headers or []
         self.header_signer = HeaderSigner(
                                 key_id=key_id, secret=secret,
-                                algorithm=algorithm, headers=headers)
+                                algorithm=algorithm, sign_algorithm=sign_algorithm, headers=headers)
         self.uses_host = 'host' in [h.lower() for h in headers]
 
     def __call__(self, r):
