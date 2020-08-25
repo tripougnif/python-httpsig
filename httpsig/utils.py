@@ -19,7 +19,8 @@ ALGORITHMS = frozenset([
                 'rsa-sha512',
                 'hmac-sha1',
                 'hmac-sha256',
-                'hmac-sha512'])
+                'hmac-sha512',
+                'hs2019'])
 HASHES = {'sha1':   SHA,
           'sha256': SHA256,
           'sha512': SHA512}

@@ -4,8 +4,8 @@ import os
 import unittest
 
 from httpsig.sign import HeaderSigner, Signer
+from httpsig.sign_algorithms import PSS
 from httpsig.verify import HeaderVerifier, Verifier
-
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
@@ -43,11 +43,12 @@ class TestVerifyHMACSHA1(BaseTestCase):
         self.algorithm = "hmac-sha1"
         self.sign_secret = secret
         self.verify_secret = secret
+        self.sign_algorithm = None
 
     def test_basic_sign(self):
-        signer = Signer(secret=self.sign_secret, algorithm=self.algorithm)
+        signer = Signer(secret=self.sign_secret, algorithm=self.algorithm, sign_algorithm=self.sign_algorithm)
         verifier = Verifier(
-                secret=self.verify_secret, algorithm=self.algorithm)
+            secret=self.verify_secret, algorithm=self.algorithm, sign_algorithm=self.sign_algorithm)
 
         GOOD = b"this is a test"
         BAD = b"this is not the signature you were looking for..."
@@ -64,10 +65,10 @@ class TestVerifyHMACSHA1(BaseTestCase):
 
         hs = HeaderSigner(
             key_id="Test", secret=self.sign_secret, algorithm=self.algorithm,
-            sign_header=self.sign_header)
+            sign_header=self.sign_header, sign_algorithm=self.sign_algorithm)
         signed = hs.sign(unsigned)
         hv = HeaderVerifier(
-            headers=signed, secret=self.verify_secret, sign_header=self.sign_header)
+            headers=signed, secret=self.verify_secret, sign_header=self.sign_header, sign_algorithm=self.sign_algorithm)
         self.assertTrue(hv.verify())
 
     def test_signed_headers(self):
@@ -75,18 +76,19 @@ class TestVerifyHMACSHA1(BaseTestCase):
         METHOD = self.test_method
         PATH = self.test_path
         hs = HeaderSigner(
-                key_id="Test",
-                secret=self.sign_secret,
-                algorithm=self.algorithm,
-                sign_header=self.sign_header,
-                headers=[
-                    '(request-target)',
-                    'host',
-                    'date',
-                    'content-type',
-                    'digest',
-                    'content-length'
-                ])
+            key_id="Test",
+            secret=self.sign_secret,
+            algorithm=self.algorithm,
+            sign_header=self.sign_header,
+            headers=[
+                '(request-target)',
+                'host',
+                'date',
+                'content-type',
+                'digest',
+                'content-length'
+            ],
+            sign_algorithm=self.sign_algorithm)
         unsigned = {
             'Host': HOST,
             'Date': self.header_date,
@@ -97,9 +99,9 @@ class TestVerifyHMACSHA1(BaseTestCase):
         signed = hs.sign(unsigned, method=METHOD, path=PATH)
 
         hv = HeaderVerifier(
-                headers=signed, secret=self.verify_secret,
-                host=HOST, method=METHOD, path=PATH,
-                sign_header=self.sign_header)
+            headers=signed, secret=self.verify_secret,
+            host=HOST, method=METHOD, path=PATH,
+            sign_header=self.sign_header, sign_algorithm=self.sign_algorithm)
         self.assertTrue(hv.verify())
 
     def test_incorrect_headers(self):
@@ -116,7 +118,8 @@ class TestVerifyHMACSHA1(BaseTestCase):
                               'date',
                               'content-type',
                               'digest',
-                              'content-length'])
+                              'content-length'],
+                          sign_algorithm=self.sign_algorithm)
         unsigned = {
             'Host': HOST,
             'Date': self.header_date,
@@ -129,7 +132,7 @@ class TestVerifyHMACSHA1(BaseTestCase):
         hv = HeaderVerifier(headers=signed, secret=self.verify_secret,
                             required_headers=["some-other-header"],
                             host=HOST, method=METHOD, path=PATH,
-                            sign_header=self.sign_header)
+                            sign_header=self.sign_header, sign_algorithm=self.sign_algorithm)
         with self.assertRaises(Exception):
             hv.verify()
 
@@ -138,17 +141,18 @@ class TestVerifyHMACSHA1(BaseTestCase):
         METHOD = "POST"
         PATH = '/foo?param=value&pet=dog'
         hs = HeaderSigner(
-                key_id="Test",
-                secret=self.sign_secret,
-                sign_header=self.sign_header,
-                algorithm=self.algorithm, headers=[
-                    '(request-target)',
-                    'host',
-                    'date',
-                    'content-type',
-                    'digest',
-                    'content-length'
-                ])
+            key_id="Test",
+            secret=self.sign_secret,
+            sign_header=self.sign_header,
+            algorithm=self.algorithm, headers=[
+                '(request-target)',
+                'host',
+                'date',
+                'content-type',
+                'digest',
+                'content-length'
+            ],
+            sign_algorithm=self.sign_algorithm)
         unsigned = {
             'Host': HOST,
             'Date': self.header_date,
@@ -158,12 +162,13 @@ class TestVerifyHMACSHA1(BaseTestCase):
         }
         signed = hs.sign(unsigned, method=METHOD, path=PATH)
         hv = HeaderVerifier(
-                headers=signed,
-                secret=self.verify_secret,
-                method=METHOD,
-                path=PATH,
-                sign_header=self.sign_header,
-                required_headers=['date', '(request-target)'])
+            headers=signed,
+            secret=self.verify_secret,
+            method=METHOD,
+            path=PATH,
+            sign_header=self.sign_header,
+            required_headers=['date', '(request-target)'],
+            sign_algorithm=self.sign_algorithm)
         self.assertTrue(hv.verify())
 
 
@@ -185,14 +190,14 @@ class TestVerifyRSASHA1(TestVerifyHMACSHA1):
 
     def setUp(self):
         private_key_path = os.path.join(
-                            os.path.dirname(__file__),
-                            'rsa_private.pem')
+            os.path.dirname(__file__),
+            'rsa_private_1024.pem')
         with open(private_key_path, 'rb') as f:
             private_key = f.read()
 
         public_key_path = os.path.join(
-                            os.path.dirname(__file__),
-                            'rsa_public.pem')
+            os.path.dirname(__file__),
+            'rsa_public_1024.pem')
         with open(public_key_path, 'rb') as f:
             public_key = f.read()
 
@@ -200,6 +205,7 @@ class TestVerifyRSASHA1(TestVerifyHMACSHA1):
         self.algorithm = "rsa-sha1"
         self.sign_secret = private_key
         self.verify_secret = public_key
+        self.sign_algorithm = None
 
 
 class TestVerifyRSASHA256(TestVerifyRSASHA1):
@@ -218,3 +224,21 @@ class TestVerifyRSASHA512(TestVerifyRSASHA1):
 
 class TestVerifyRSASHA512ChangeHeader(TestVerifyRSASHA1):
     sign_header = 'Signature'
+
+
+class TestVerifyHS2019PSS(TestVerifyHMACSHA1):
+
+    def setUp(self):
+        private_key_path = os.path.join(os.path.dirname(__file__), 'rsa_private_2048.pem')
+        with open(private_key_path, 'rb') as f:
+            private_key = f.read()
+
+        public_key_path = os.path.join(os.path.dirname(__file__), 'rsa_public_2048.pem')
+        with open(public_key_path, 'rb') as f:
+            public_key = f.read()
+
+        self.keyId = "Test"
+        self.algorithm = "hs2019"
+        self.sign_secret = private_key
+        self.verify_secret = public_key
+        self.sign_algorithm = PSS(salt_length=0)

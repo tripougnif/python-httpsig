@@ -7,7 +7,7 @@ httpsig
 .. image:: https://travis-ci.org/ahknight/httpsig.svg?branch=develop
     :target: https://travis-ci.org/ahknight/httpsig
 
-Sign HTTP requests with secure signatures according to the IETF HTTP Signatures specification (`Draft 8`_).  This is a fork of the original module_ to fully support both RSA and HMAC schemes as well as unit test both schemes to prove they work.  It's being used in production and is actively-developed.
+Sign HTTP requests with secure signatures according to the IETF HTTP Signatures specification (`Draft 12`_).  This is a fork of the original module_ to fully support both RSA and HMAC schemes as well as unit test both schemes to prove they work.  It's being used in production and is actively-developed.
 
 See the original project_, original Python module_, original spec_, and `current IETF draft`_ for more details on the signing scheme.
 
@@ -15,7 +15,7 @@ See the original project_, original Python module_, original spec_, and `current
 .. _module: https://github.com/zzsnzmn/py-http-signature
 .. _spec: https://github.com/joyent/node-http-signature/blob/master/http_signing.md
 .. _`current IETF draft`: https://datatracker.ietf.org/doc/draft-cavage-http-signatures/
-.. _`Draft 8`: http://tools.ietf.org/html/draft-cavage-http-signatures-08
+.. _`Draft 12`: http://tools.ietf.org/html/draft-cavage-http-signatures-12
 
 Requirements
 ------------
@@ -49,7 +49,7 @@ For simple raw signing:
     
     secret = open('rsa_private.pem', 'rb').read()
     
-    sig_maker = httpsig.Signer(secret=secret, algorithm='rsa-sha256')
+    sig_maker = httpsig.Signer(secret=secret, algorithm='hs2019', sign_algorithm=httpsig.PSS())
     sig_maker.sign('hello world!')
 
 For general use with web frameworks:
@@ -59,9 +59,9 @@ For general use with web frameworks:
     import httpsig
     
     key_id = "Some Key ID"
-    secret = b'some big secret'
+    secret = open('rsa_private.pem', 'rb').read()
     
-    hs = httpsig.HeaderSigner(key_id, secret, algorithm="hmac-sha256", headers=['(request-target)', 'host', 'date'])
+    hs = httpsig.HeaderSigner(key_id, secret, algorithm="hs2019", sign_algorithm=httpsig.PSS(), headers=['(request-target)', 'host', 'date'])
     signed_headers_dict = hs.sign({"Date": "Tue, 01 Jan 2014 01:01:01 GMT", "Host": "example.com"}, method="GET", path="/api/1/object/1")
 
 For use with requests:
@@ -74,9 +74,9 @@ For use with requests:
     
     secret = open('rsa_private.pem', 'rb').read()
     
-    auth = HTTPSignatureAuth(key_id='Test', secret=secret)
+    auth = HTTPSignatureAuth(key_id='Test', secret=secret, sign_algorithm=httpsig.PSS())
     z = requests.get('https://api.example.com/path/to/endpoint', 
-                             auth=auth, headers={'X-Api-Version': '~6.5'})
+                             auth=auth, headers={'X-Api-Version': '~6.5', 'Date': 'Tue, 01 Jan 2014 01:01:01 GMT')
 
 Class initialization parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -85,20 +85,22 @@ Note that keys and secrets should be bytes objects.  At attempt will be made to 
 
 .. code:: python
 
-    httpsig.Signer(secret, algorithm='rsa-sha256')
+    httpsig.Signer(secret, algorithm='hs2019', sign_algorithm=httpsig.PSS())
 
 ``secret``, in the case of an RSA signature, is a string containing private RSA pem. In the case of HMAC, it is a secret password.  
-``algorithm`` is one of the six allowed signatures: ``rsa-sha1``, ``rsa-sha256``, ``rsa-sha512``, ``hmac-sha1``, ``hmac-sha256``, 
+``algorithm`` should be set to 'hs2019' the other six signatures are now deprecated: ``rsa-sha1``, ``rsa-sha256``, ``rsa-sha512``, ``hmac-sha1``, ``hmac-sha256``,
 ``hmac-sha512``.
+``sign_algorithm`` The digital signature algorithm derived from ``keyId``. Currently supported algorithms: ``httpsig.PSS``
 
 
 .. code:: python
 
-    httpsig.requests_auth.HTTPSignatureAuth(key_id, secret, algorithm='rsa-sha256', headers=None)
+    httpsig.requests_auth.HTTPSignatureAuth(key_id, secret, algorithm='hs2019', sign_algorithm=httpsig.PSS(), headers=None)
 
-``key_id`` is the label by which the server system knows your RSA signature or password.  
+``key_id`` is the label by which the server system knows your secret.
 ``headers`` is the list of HTTP headers that are concatenated and used as signing objects. By default it is the specification's minimum, the ``Date`` HTTP header.  
 ``secret`` and ``algorithm`` are as above.
+``sign_algorithm`` The digital signature algorithm derived from ``keyId``. Currently supported algorithms: ``httpsig.PSS``
 
 Tests
 -----

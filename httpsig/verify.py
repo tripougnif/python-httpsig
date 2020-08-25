@@ -4,7 +4,8 @@ Module to assist in verifying a signed header.
 import base64
 import six
 
-from .sign import Signer
+from .sign import Signer, DEFAULT_ALGORITHM
+from .sign_algorithms import SignAlgorithm
 from .utils import *
 
 
@@ -37,6 +38,9 @@ class Verifier(Signer):
             s = base64.b64decode(signature)
             return ct_bytes_compare(h, s)
 
+        elif issubclass(type(self.sign_algorithm), SignAlgorithm):
+            return self.sign_algorithm.verify(self.secret, data, signature)
+
         else:
             raise HttpSigException("Unsupported algorithm.")
 
@@ -47,7 +51,7 @@ class HeaderVerifier(Verifier):
     """
 
     def __init__(self, headers, secret, required_headers=None, method=None,
-                 path=None, host=None, sign_header='authorization'):
+                 path=None, host=None, sign_header='authorization', sign_algorithm=None):
         """
         Instantiate a HeaderVerifier object.
 
@@ -66,6 +70,8 @@ class HeaderVerifier(Verifier):
             header, if not supplied in :param:headers.
         :param sign_header:         Optional. The header where the signature is.
             Default is 'authorization'.
+        :param sign_algorithm:      Required for 'hs2019' algorithm, specifies the
+                                    digital signature algorithm (derived from keyId) to use.
         """
         required_headers = required_headers or ['date']
         self.headers = CaseInsensitiveDict(headers)
@@ -84,8 +90,13 @@ class HeaderVerifier(Verifier):
         self.path = path
         self.host = host
 
+        if self.auth_dict['algorithm'] != DEFAULT_ALGORITHM:
+            print("Algorithm: {} is deprecated please update to {}".format(self.auth_dict['algorithm'], DEFAULT_ALGORITHM))
+        elif self.auth_dict['algorithm'] == DEFAULT_ALGORITHM and sign_algorithm is None:
+            raise HttpSigException("Required sign algorithm for {} algorithm not set".format(DEFAULT_ALGORITHM))
+
         super(HeaderVerifier, self).__init__(
-                secret, algorithm=self.auth_dict['algorithm'])
+                secret, algorithm=self.auth_dict['algorithm'], sign_algorithm=sign_algorithm)
 
     def verify(self):
         """
