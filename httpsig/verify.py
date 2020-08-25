@@ -5,7 +5,7 @@ import base64
 import six
 
 from .sign import Signer, DEFAULT_SIGN_ALGORITHM
-from .sign_algorithms import SIGN_ALGORITHMS
+from .sign_algorithms import SignAlgorithm
 from .utils import *
 
 
@@ -38,7 +38,7 @@ class Verifier(Signer):
             s = base64.b64decode(signature)
             return ct_bytes_compare(h, s)
 
-        elif self.sign_algorithm.__class__.__name__ in SIGN_ALGORITHMS:
+        elif isinstance(self.sign_algorithm, SignAlgorithm):
             return self.sign_algorithm.verify(self.secret, data, signature)
 
         else:
@@ -72,7 +72,6 @@ class HeaderVerifier(Verifier):
             Default is 'authorization'.
         :param sign_algorithm:      Required for 'hs2019' algorithm, specifies the
                                     digital signature algorithm (derived from keyId) to use.
-        :param sign_algorithm:      Custom salt length for 'hs2019' and 'PSS' sign algorithm.
         """
         required_headers = required_headers or ['date']
         self.headers = CaseInsensitiveDict(headers)

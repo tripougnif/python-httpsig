@@ -5,7 +5,7 @@ import six
 from Crypto.Hash import HMAC
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_v1_5
-from .sign_algorithms import SIGN_ALGORITHMS
+from .sign_algorithms import SignAlgorithm
 from .utils import *
 
 DEFAULT_SIGN_ALGORITHM = "hs2019"
@@ -19,14 +19,11 @@ class Signer(object):
     Password-protected keyfiles are not supported.
     """
 
-    def __init__(self, secret, algorithm=None, sign_algorithm=None):
+    def __init__(self, secret, algorithm=None, sign_algorithm: SignAlgorithm=None):
         if algorithm is None:
             algorithm = DEFAULT_SIGN_ALGORITHM
 
         assert algorithm in ALGORITHMS, "Unknown algorithm"
-
-        if sign_algorithm is not None and sign_algorithm.__class__.__name__ not in SIGN_ALGORITHMS:
-            raise HttpSigException("Unsupported digital signature algorithm")
 
         if algorithm != DEFAULT_SIGN_ALGORITHM:
             print("Algorithm: {} is deprecated please update to {}".format(algorithm, DEFAULT_SIGN_ALGORITHM))
@@ -79,7 +76,7 @@ class Signer(object):
             signed = self._sign_rsa(data)
         elif self._hash:
             signed = self._sign_hmac(data)
-        elif self.sign_algorithm.__class__.__name__ in SIGN_ALGORITHMS:
+        elif isinstance(self.sign_algorithm, SignAlgorithm):
             signed = self.sign_algorithm.sign(self.secret, data)
         if not signed:
             raise SystemError('No valid encryptor found.')
@@ -98,7 +95,6 @@ class HeaderSigner(Signer):
         match the algorithm)
     :param algorithm: one of the seven specified algorithms
     :param sign_algorithm: required for 'hs2019' algorithm. Sign algorithm for the secret
-    :param sign_algorithm:      Custom salt length for 'hs2019' and 'PSS' sign algorithm.
     :param headers:   a list of http headers to be included in the signing
         string, defaulting to ['date'].
     :param sign_header: header used to include signature, defaulting to

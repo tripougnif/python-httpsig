@@ -4,11 +4,24 @@ import six
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_PSS
 from httpsig.utils import HttpSigException, HASHES
+from abc import ABCMeta, abstractmethod
 
 DEFAULT_HASH_ALGORITHM = "sha512"
 
 
-class PSS(object):
+class SignAlgorithm(object):
+    __metaclass__ = ABCMeta
+
+    @abstractmethod
+    def sign(self, *args):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def verify(self, *args):
+        raise NotImplementedError()
+
+
+class PSS(SignAlgorithm):
 
     def __init__(self, hash_algorithm=DEFAULT_HASH_ALGORITHM, salt_length=None, mgfunc=None):
         if hash_algorithm not in HASHES:
@@ -46,8 +59,3 @@ class PSS(object):
         h = self.hash_algorithm.new()
         h.update(data)
         return pss.verify(h, base64.b64decode(signature))
-
-
-SIGN_ALGORITHMS = frozenset([
-    "PSS"
-])
