@@ -38,7 +38,7 @@ class Verifier(Signer):
             s = base64.b64decode(signature)
             return ct_bytes_compare(h, s)
 
-        elif isinstance(self.sign_algorithm, SignAlgorithm):
+        elif issubclass(type(self.sign_algorithm), SignAlgorithm):
             return self.sign_algorithm.verify(self.secret, data, signature)
 
         else:

@@ -19,11 +19,14 @@ class Signer(object):
     Password-protected keyfiles are not supported.
     """
 
-    def __init__(self, secret, algorithm=None, sign_algorithm: SignAlgorithm=None):
+    def __init__(self, secret, algorithm=None, sign_algorithm=None):
         if algorithm is None:
             algorithm = DEFAULT_SIGN_ALGORITHM
 
         assert algorithm in ALGORITHMS, "Unknown algorithm"
+
+        if sign_algorithm is not None and not issubclass(type(sign_algorithm), SignAlgorithm):
+            raise HttpSigException("Unsupported digital signature algorithm")
 
         if algorithm != DEFAULT_SIGN_ALGORITHM:
             print("Algorithm: {} is deprecated please update to {}".format(algorithm, DEFAULT_SIGN_ALGORITHM))
