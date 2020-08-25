@@ -141,3 +141,219 @@ class TestSign(unittest.TestCase):
         with pytest.raises(HttpSigException) as e:
             sign.HeaderSigner(key_id='Test', secret=self.key_2048, sign_algorithm=PSS("sha256", salt_length=0))
         self.assertEqual(str(e.value), "Hash algorithm: sha256 is deprecated. Please use: sha512")
+
+    def test_empty_secret(self):
+        with self.assertRaises(ValueError) as e:
+            sign.HeaderSigner(key_id='Test', secret='', headers=[
+                '(request-target)',
+                'host',
+                'date',
+                'content-type',
+                'digest',
+                'content-length'
+            ])
+        self.assertEqual(str(e.exception), "secret can't be empty")
+
+    def test_none_secret(self):
+        with self.assertRaises(ValueError) as e:
+            sign.HeaderSigner(key_id='Test', secret=None, headers=[
+                '(request-target)',
+                'host',
+                'date',
+                'content-type',
+                'digest',
+                'content-length'
+            ])
+        self.assertEqual(str(e.exception), "secret can't be empty")
+
+    def test_huge_secret(self):
+        with self.assertRaises(ValueError) as e:
+            sign.HeaderSigner(key_id='Test', secret='x' * 1000000, headers=[
+                '(request-target)',
+                'host',
+                'date',
+                'content-type',
+                'digest',
+                'content-length'
+            ])
+        self.assertEqual(str(e.exception), "secret cant be larger than 100000 chars")
+
+    def test_empty_key_id(self):
+        with self.assertRaises(ValueError) as e:
+            sign.HeaderSigner(key_id='', secret=self.key_2048, headers=[
+                '(request-target)',
+                'host',
+                'date',
+                'content-type',
+                'digest',
+                'content-length'
+            ])
+        self.assertEqual(str(e.exception), "key_id can't be empty")
+
+    def test_none_key_id(self):
+        with self.assertRaises(ValueError) as e:
+            sign.HeaderSigner(key_id=None, secret=self.key_2048, headers=[
+                '(request-target)',
+                'host',
+                'date',
+                'content-type',
+                'digest',
+                'content-length'
+            ])
+        self.assertEqual(str(e.exception), "key_id can't be empty")
+
+    def test_huge_key_id(self):
+        with self.assertRaises(ValueError) as e:
+            sign.HeaderSigner(key_id='x' * 1000000, secret=self.key_2048, headers=[
+                '(request-target)',
+                'host',
+                'date',
+                'content-type',
+                'digest',
+                'content-length'
+            ])
+        self.assertEqual(str(e.exception), "key_id cant be larger than 100000 chars")
+
+    def test_empty_method(self):
+        hs = sign.HeaderSigner(key_id='Test', secret=self.key_2048, sign_algorithm=PSS("sha512", salt_length=0), headers=[
+            '(request-target)',
+            'host',
+            'date',
+            'content-type',
+            'digest',
+            'content-length'
+        ])
+        unsigned = {
+            'Host': self.header_host,
+            'Date': self.header_date,
+            'Content-Type': self.header_content_type,
+            'Digest': self.header_digest,
+            'Content-Length': self.header_content_length,
+        }
+
+        with self.assertRaises(ValueError) as e:
+            hs.sign(unsigned, method='', path=self.test_path)
+        self.assertEqual(str(e.exception), 'method and path arguments required when using "(request-target)"')
+
+    def test_none_method(self):
+        hs = sign.HeaderSigner(key_id='Test', secret=self.key_2048, sign_algorithm=PSS("sha512", salt_length=0), headers=[
+            '(request-target)',
+            'host',
+            'date',
+            'content-type',
+            'digest',
+            'content-length'
+        ])
+        unsigned = {
+            'Host': self.header_host,
+            'Date': self.header_date,
+            'Content-Type': self.header_content_type,
+            'Digest': self.header_digest,
+            'Content-Length': self.header_content_length,
+        }
+
+        with self.assertRaises(ValueError) as e:
+            hs.sign(unsigned, method=None, path=self.test_path)
+        self.assertEqual(str(e.exception), 'method and path arguments required when using "(request-target)"')
+
+    def test_empty_path(self):
+        hs = sign.HeaderSigner(key_id='Test', secret=self.key_2048, sign_algorithm=PSS("sha512", salt_length=0), headers=[
+            '(request-target)',
+            'host',
+            'date',
+            'content-type',
+            'digest',
+            'content-length'
+        ])
+        unsigned = {
+            'Host': self.header_host,
+            'Date': self.header_date,
+            'Content-Type': self.header_content_type,
+            'Digest': self.header_digest,
+            'Content-Length': self.header_content_length,
+        }
+
+        with self.assertRaises(ValueError) as e:
+            hs.sign(unsigned, method=self.test_method, path='')
+        self.assertEqual(str(e.exception), 'method and path arguments required when using "(request-target)"')
+
+    def test_none_path(self):
+        hs = sign.HeaderSigner(key_id='Test', secret=self.key_2048, sign_algorithm=PSS("sha512", salt_length=0), headers=[
+            '(request-target)',
+            'host',
+            'date',
+            'content-type',
+            'digest',
+            'content-length'
+        ])
+        unsigned = {
+            'Host': self.header_host,
+            'Date': self.header_date,
+            'Content-Type': self.header_content_type,
+            'Digest': self.header_digest,
+            'Content-Length': self.header_content_length,
+        }
+
+        with self.assertRaises(ValueError) as e:
+            hs.sign(unsigned, method=self.test_method, path=None)
+        self.assertEqual(str(e.exception), 'method and path arguments required when using "(request-target)"')
+
+    def test_missing_header_host(self):
+        hs = sign.HeaderSigner(key_id='Test', secret=self.key_2048, sign_algorithm=PSS("sha512", salt_length=0), headers=[
+            '(request-target)',
+            'host',
+            'date',
+            'content-type',
+            'digest',
+            'content-length'
+        ])
+        unsigned = {
+            'Date': self.header_date,
+            'Content-Type': self.header_content_type,
+            'Digest': self.header_digest,
+            'Content-Length': self.header_content_length,
+        }
+
+        with self.assertRaises(ValueError) as e:
+            hs.sign(unsigned, method=self.test_method, path=self.test_path)
+        self.assertEqual(str(e.exception), 'missing required header "host"')
+
+    def test_missing_header_date(self):
+        hs = sign.HeaderSigner(key_id='Test', secret=self.key_2048, sign_algorithm=PSS("sha512", salt_length=0), headers=[
+            '(request-target)',
+            'host',
+            'date',
+            'content-type',
+            'digest',
+            'content-length'
+        ])
+        unsigned = {
+            'Host': self.header_host,
+            'Content-Type': self.header_content_type,
+            'Digest': self.header_digest,
+            'Content-Length': self.header_content_length,
+        }
+
+        with self.assertRaises(ValueError) as e:
+            hs.sign(unsigned, method=self.test_method, path=self.test_path)
+        self.assertEqual(str(e.exception), 'missing required header "date"')
+
+    def test_missing_header_digest(self):
+        hs = sign.HeaderSigner(key_id='Test', secret=self.key_2048, sign_algorithm=PSS("sha512", salt_length=0), headers=[
+            '(request-target)',
+            'host',
+            'date',
+            'content-type',
+            'digest',
+            'content-length'
+        ])
+        unsigned = {
+            'Host': self.header_host,
+            'Date': self.header_date,
+            'Content-Type': self.header_content_type,
+            'Content-Length': self.header_content_length,
+        }
+
+        with self.assertRaises(ValueError) as e:
+            hs.sign(unsigned, method=self.test_method, path=self.test_path)
+        self.assertEqual(str(e.exception), 'missing required header "digest"')

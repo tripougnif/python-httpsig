@@ -73,6 +73,12 @@ class HeaderVerifier(Verifier):
         :param sign_algorithm:      Required for 'hs2019' algorithm, specifies the
                                     digital signature algorithm (derived from keyId) to use.
         """
+        if not secret:
+            raise ValueError("secret cant be empty")
+
+        if len(secret) > 100000:
+            raise ValueError("secret cant be larger than 100000 chars")
+
         required_headers = required_headers or ['date']
         self.headers = CaseInsensitiveDict(headers)
 
@@ -112,7 +118,7 @@ class HeaderVerifier(Verifier):
         if len(set(self.required_headers) - set(auth_headers)) > 0:
             error_headers = ', '.join(
                     set(self.required_headers) - set(auth_headers))
-            raise Exception(
+            raise ValueError(
                     '{} is a required header(s)'.format(error_headers))
 
         signing_str = generate_message(

@@ -65,7 +65,7 @@ def generate_message(required_headers, headers, host=None, method=None,
         h = h.lower()
         if h == '(request-target)':
             if not method or not path:
-                raise Exception('method and path arguments required when ' +
+                raise ValueError('method and path arguments required when ' +
                                 'using "(request-target)"')
             signable_list.append('%s: %s %s' % (h, method.lower(), path))
 
@@ -77,11 +77,11 @@ def generate_message(required_headers, headers, host=None, method=None,
                 if 'host' in headers:
                     host = headers[h]
                 else:
-                    raise Exception('missing required header "%s"' % h)
+                    raise ValueError('missing required header "%s"' % h)
             signable_list.append('%s: %s' % (h, host))
         else:
             if h not in headers:
-                raise Exception('missing required header "%s"' % h)
+                raise ValueError('missing required header "%s"' % h)
 
             signable_list.append('%s: %s' % (h, headers[h]))
 
