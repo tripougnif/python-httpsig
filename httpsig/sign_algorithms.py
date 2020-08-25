@@ -13,11 +13,11 @@ class SignAlgorithm(object):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def sign(self, *args):
+    def sign(self, private, data):
         raise NotImplementedError()
 
     @abstractmethod
-    def verify(self, *args):
+    def verify(self, public, data, signature):
         raise NotImplementedError()
 
 
