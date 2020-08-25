@@ -21,7 +21,7 @@ class TestSign(unittest.TestCase):
     header_host = 'example.com'
     header_date = 'Thu, 05 Jan 2014 21:31:40 GMT'
     header_content_type = 'application/json'
-    header_digest = 'SHA-512=X48E9qOokqqrvdts8nOJRJN3OWDUoyWxBf7kbu9DBPE='
+    header_digest = 'SHA-256=X48E9qOokqqrvdts8nOJRJN3OWDUoyWxBf7kbu9DBPE='
     header_content_length = '18'
 
     def setUp(self):
@@ -112,7 +112,7 @@ class TestSign(unittest.TestCase):
         self.assertEqual(
             params['headers'],
             '(request-target) host date content-type digest content-length')
-        self.assertEqual(params['signature'], 'Ur8ehf0YlxBIRyXJG+iBBubrMlxWxDqpYgEaABq5ukcant30Gygkrs4ujFWxlR8pbBS/kDewYdlNhJOsVva2Y/ZSmardYHWYuSw3QjW0KON7nfVT/hijDFCAAzDDOqS6uSJimWmyko23bt2XDydMS2ekGoRFXxQcCtd2piWDpwaHneZiUu4njoiyRVZo9dLWMe9i9QR/14tjWO+PinfSlo1Bs1uMKGjx3EDRSw76cMHXb0VURzVf08ShBxsnts8o/l8TPNyMgcqeEuNaMFTr3rMMpfkeLtBcBljqnvPjusAPmzJxi6aElophSmuPpwSgC/QCHOxT99mEObrf0VDRNw==')  # noqa: E501
+        self.assertEqual(params['signature'], 'bxWyLDB/Tuhzxd/tWG2g60l3Goyk9XJZzj2ouNKizZuZoe1Ngj+19N11bhK7FABHJ7lSzH5g6fp5LkN894ivIv6N29L2sPssuAkqgzNXyvYkp4KWOr5j7sVpApmRH7gf7THljcXosmrYk5gdBTspixpJJJ5LGkkPKCRAFurmi/LqopSH6cJbLJNIccTu2dTMGEeDOqqNterVmfonpZyPeBsEEwoeOo6d8zgHzB/1Xxk7dfELFbA1c0LE5kZbwEIEFPmS01YFz6EJW7Aj8kzvzwQRyvgDobi25niGOy/D7JVHvtDjBIaJedFuFJSb8rZ2DGryBQ6NwchMp3f2MUoTGg==')  # noqa: E501
 
     def test_default_deprecated_256(self):
         hs = sign.HeaderSigner(key_id='Test', secret=self.key_1024, algorithm="rsa-sha256")
