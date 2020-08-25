@@ -7,7 +7,7 @@ httpsig
 .. image:: https://travis-ci.org/ahknight/httpsig.svg?branch=develop
     :target: https://travis-ci.org/ahknight/httpsig
 
-Sign HTTP requests with secure signatures according to the IETF HTTP Signatures specification (`Draft 8`_).  This is a fork of the original module_ to fully support both RSA and HMAC schemes as well as unit test both schemes to prove they work.  It's being used in production and is actively-developed.
+Sign HTTP requests with secure signatures according to the IETF HTTP Signatures specification (`Draft 12`_).  This is a fork of the original module_ to fully support both RSA and HMAC schemes as well as unit test both schemes to prove they work.  It's being used in production and is actively-developed.
 
 See the original project_, original Python module_, original spec_, and `current IETF draft`_ for more details on the signing scheme.
 
@@ -15,7 +15,7 @@ See the original project_, original Python module_, original spec_, and `current
 .. _module: https://github.com/zzsnzmn/py-http-signature
 .. _spec: https://github.com/joyent/node-http-signature/blob/master/http_signing.md
 .. _`current IETF draft`: https://datatracker.ietf.org/doc/draft-cavage-http-signatures/
-.. _`Draft 8`: http://tools.ietf.org/html/draft-cavage-http-signatures-08
+.. _`Draft 12`: http://tools.ietf.org/html/draft-cavage-http-signatures-12
 
 Requirements
 ------------
