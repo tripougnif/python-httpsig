@@ -90,6 +90,11 @@ class HeaderVerifier(Verifier):
         self.path = path
         self.host = host
 
+        if 'algorithm' in self.auth_dict and self.auth_dict['algorithm'] != self.algorithm:
+            raise HttpSigException(
+                "Algorithm mismath, signature parameter algorithm was: {}, but algorithm dervice from key is: {}".format(
+                    self.auth_dict['algorithm'], self.algorithm))
+
         if self.auth_dict['algorithm'] != DEFAULT_ALGORITHM:
             print("Algorithm: {} is deprecated please update to {}".format(self.auth_dict['algorithm'], DEFAULT_ALGORITHM))
         elif self.auth_dict['algorithm'] == DEFAULT_ALGORITHM and sign_algorithm is None:
