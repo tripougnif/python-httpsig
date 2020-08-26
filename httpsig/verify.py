@@ -51,7 +51,7 @@ class HeaderVerifier(Verifier):
     """
 
     def __init__(self, headers, secret, required_headers=None, method=None,
-                 path=None, host=None, sign_header='authorization', sign_algorithm=None):
+                 path=None, host=None, sign_header='authorization', algorithm=None, sign_algorithm=None):
         """
         Instantiate a HeaderVerifier object.
 
@@ -70,6 +70,7 @@ class HeaderVerifier(Verifier):
             header, if not supplied in :param:headers.
         :param sign_header:         Optional. The header where the signature is.
             Default is 'authorization'.
+        :param algorithm:           Algorithm derived from keyId (required for draft version >= 12)
         :param sign_algorithm:      Required for 'hs2019' algorithm, specifies the
                                     digital signature algorithm (derived from keyId) to use.
         """
@@ -89,11 +90,7 @@ class HeaderVerifier(Verifier):
         self.method = method
         self.path = path
         self.host = host
-
-        if 'algorithm' in self.auth_dict and self.auth_dict['algorithm'] != self.algorithm:
-            raise HttpSigException(
-                "Algorithm mismath, signature parameter algorithm was: {}, but algorithm dervice from key is: {}".format(
-                    self.auth_dict['algorithm'], self.algorithm))
+        self.derived_algorithm = algorithm
 
         if self.auth_dict['algorithm'] != DEFAULT_ALGORITHM:
             print("Algorithm: {} is deprecated please update to {}".format(self.auth_dict['algorithm'], DEFAULT_ALGORITHM))
@@ -112,6 +109,11 @@ class HeaderVerifier(Verifier):
             not found in the signature.
         Returns True or False.
         """
+        if 'algorithm' in self.auth_dict and self.derived_algorithm is not None and self.auth_dict['algorithm'] != self.derived_algorithm:
+            print("Algorithm mismatch, signature parameter algorithm was: {}, but algorithm derived from key is: {}".format(
+                    self.auth_dict['algorithm'], self.derived_algorithm))
+            return False
+
         auth_headers = self.auth_dict.get('headers', 'date').split(' ')
 
         if len(set(self.required_headers) - set(auth_headers)) > 0:
