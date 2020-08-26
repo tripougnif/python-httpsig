@@ -259,6 +259,20 @@ class TestVerifyHS2019PSS(TestVerifyHMACSHA1):
         self.verify_secret = public_key
         self.sign_algorithm = PSS(salt_length=0)
 
+    def test_algorithm_mismatch(self):
+        unsigned = {
+            'Date': self.header_date
+        }
+
+        hs = HeaderSigner(
+            key_id="Test", secret=self.sign_secret, algorithm=self.algorithm,
+            sign_header=self.sign_header, sign_algorithm=self.sign_algorithm)
+        signed = hs.sign(unsigned)
+
+        hv = HeaderVerifier(
+            headers=signed, secret=self.verify_secret, sign_header=self.sign_header, algorithm="rsa-sha256", sign_algorithm=self.sign_algorithm)
+        self.assertFalse(hv.verify())
+
 
 class TestSignAndVerify(unittest.TestCase):
     header_date = 'Thu, 05 Jan 2014 21:31:40 GMT'
