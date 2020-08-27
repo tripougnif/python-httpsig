@@ -30,6 +30,8 @@ class Signer(object):
 
         if algorithm != DEFAULT_ALGORITHM:
             print("Algorithm: {} is deprecated please update to {}".format(algorithm, DEFAULT_ALGORITHM))
+        elif algorithm == DEFAULT_ALGORITHM and sign_algorithm is None:
+            raise HttpSigException("Required sign algorithm for {} algorithm not set".format(DEFAULT_ALGORITHM))
 
         if isinstance(secret, six.string_types):
             secret = secret.encode("ascii")

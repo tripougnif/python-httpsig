@@ -98,13 +98,8 @@ class HeaderVerifier(Verifier):
         self.host = host
         self.derived_algorithm = algorithm
 
-        if self.auth_dict['algorithm'] != DEFAULT_ALGORITHM:
-            print("Algorithm: {} is deprecated please update to {}".format(self.auth_dict['algorithm'], DEFAULT_ALGORITHM))
-        elif self.auth_dict['algorithm'] == DEFAULT_ALGORITHM and sign_algorithm is None:
-            raise HttpSigException("Required sign algorithm for {} algorithm not set".format(DEFAULT_ALGORITHM))
-
         super(HeaderVerifier, self).__init__(
-                secret, algorithm=self.auth_dict['algorithm'], sign_algorithm=sign_algorithm)
+            secret, algorithm=self.auth_dict['algorithm'], sign_algorithm=sign_algorithm)
 
     def verify(self):
         """
