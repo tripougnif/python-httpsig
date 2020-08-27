@@ -273,7 +273,7 @@ class TestVerifyHS2019PSS(TestVerifyHMACSHA1):
             headers=signed, secret=self.verify_secret, sign_header=self.sign_header, algorithm="rsa-sha256", sign_algorithm=self.sign_algorithm)
         self.assertFalse(hv.verify())
 
-    def test_correct_derviced_algorithm(self):
+    def test_correct_derived_algorithm(self):
         unsigned = {
             'Date': self.header_date
         }
