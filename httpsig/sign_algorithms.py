@@ -35,10 +35,13 @@ class PSS(SignAlgorithm):
         self.salt_length = salt_length
         self.mgfunc = mgfunc
 
-    def _create_pss(self, key, salt_length):
+        if self.salt_length is None:
+            self.salt_length = self.hash_algorithm.digest_size
+
+    def _create_pss(self, key):
         try:
             rsa_key = RSA.importKey(key)
-            pss = PKCS1_PSS.new(rsa_key, saltLen=salt_length, mgfunc=self.mgfunc)
+            pss = PKCS1_PSS.new(rsa_key, saltLen=self.salt_length, mgfunc=self.mgfunc)
         except ValueError:
             raise HttpSigException("Invalid key.")
         return pss
@@ -50,11 +53,7 @@ class PSS(SignAlgorithm):
         h = self.hash_algorithm.new()
         h.update(data)
 
-        salt_length = self.salt_length
-        if salt_length is None:
-            salt_length = h.digest_size
-
-        pss = self._create_pss(private_key, salt_length)
+        pss = self._create_pss(private_key)
 
         return pss.sign(h)
 
@@ -62,10 +61,6 @@ class PSS(SignAlgorithm):
         h = self.hash_algorithm.new()
         h.update(data)
 
-        salt_length = self.salt_length
-        if salt_length is None:
-            salt_length = h.digest_size
-
-        pss = self._create_pss(public_key, salt_length)
+        pss = self._create_pss(public_key)
 
         return pss.verify(h, base64.b64decode(signature))
