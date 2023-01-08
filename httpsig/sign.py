@@ -47,6 +47,7 @@ class Signer(object):
             assert sign_algorithm is not None, "Required digital signature algorithm not specified"
             self.sign_algorithm = sign_algorithm
 
+        print("sign_algorithm = ", self.sign_algorithm)
         if self.sign_algorithm == 'rsa':
             try:
                 rsa_key = RSA.importKey(secret)
@@ -106,7 +107,7 @@ class HeaderSigner(Signer):
        'authorization'.
     """
 
-    def __init__(self, key_id, secret, algorithm=None, sign_algorithm=None, headers=None, sign_header='authorization'):
+    def __init__(self, key_id, secret, algorithm=None, sign_algorithm=None, headers=None, created=None, expires=None, sign_header='Signature'):
         if algorithm is None:
             algorithm = DEFAULT_ALGORITHM
         if not key_id:
@@ -124,10 +125,10 @@ class HeaderSigner(Signer):
         super(HeaderSigner, self).__init__(secret=secret, algorithm=algorithm, sign_algorithm=sign_algorithm)
         self.headers = headers or ['date']
         self.signature_template = build_signature_template(
-            key_id, algorithm, headers, sign_header)
+            key_id, algorithm, headers, created, expires, sign_header)
         self.sign_header = sign_header
 
-    def sign(self, headers, host=None, method=None, path=None):
+    def sign(self, headers, host=None, method=None, path=None, created=None, expires=None):
         """
         Add Signature Authorization header to case-insensitive header dict.
 
@@ -137,10 +138,11 @@ class HeaderSigner(Signer):
         `method` is the HTTP method (required when using '(request-target)').
         `path` is the HTTP path (required when using '(request-target)').
         """
-        headers = CaseInsensitiveDict(headers)
+        #headers = CaseInsensitiveDict(headers)
         required_headers = self.headers or ['date']
         signable = generate_message(
-            required_headers, headers, host, method, path)
+            required_headers, headers, host, method, path, created, expires)
+        print(signable)
 
         signature = super(HeaderSigner, self).sign(signable)
         headers[self.sign_header] = self.signature_template % signature

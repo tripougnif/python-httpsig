@@ -3,10 +3,11 @@ import base64
 import six
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_PSS
+from Crypto.Signature import PKCS1_v1_5
 from httpsig.utils import HttpSigException, HASHES
 from abc import ABCMeta, abstractmethod
 
-DEFAULT_HASH_ALGORITHM = "sha512"
+DEFAULT_HASH_ALGORITHM = "sha256"
 
 
 class SignAlgorithm(object):
@@ -41,7 +42,8 @@ class PSS(SignAlgorithm):
     def _create_pss(self, key):
         try:
             rsa_key = RSA.importKey(key)
-            pss = PKCS1_PSS.new(rsa_key, saltLen=self.salt_length, mgfunc=self.mgfunc)
+            #pss = PKCS1_PSS.new(rsa_key, saltLen=self.salt_length, mgfunc=self.mgfunc)
+            pss = PKCS1_v1_5.new(rsa_key)
         except ValueError:
             raise HttpSigException("Invalid key.")
         return pss

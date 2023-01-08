@@ -54,7 +54,7 @@ def ct_bytes_compare(a, b):
 
 
 def generate_message(required_headers, headers, host=None, method=None,
-                     path=None):
+                     path=None, created=None, expires=None):
     headers = CaseInsensitiveDict(headers)
 
     if not required_headers:
@@ -69,6 +69,16 @@ def generate_message(required_headers, headers, host=None, method=None,
                                 'using "(request-target)"')
             signable_list.append('%s: %s %s' % (h, method.lower(), path))
 
+        elif h == '(created)':
+            if not created:
+                raise ValueError('created argument required when ' +
+                                'using "(created)"')
+            signable_list.append('%s: %d' % (h, created))
+        elif h == '(expires)':
+            if not expires:
+                raise ValueError('expires argument required when ' +
+                                'using "(expires)"')
+            signable_list.append('%s: %d' % (h, expires))
         elif h == 'host':
             # 'host' special case due to requests lib restrictions
             # 'host' is not available when adding auth so must use a param
@@ -129,7 +139,7 @@ def parse_authorization_header(header):
     return (auth[0], values)
 
 
-def build_signature_template(key_id, algorithm, headers, sign_header='authorization'):
+def build_signature_template(key_id, algorithm, headers, created, expires, sign_header='Signature'):
     """
     Build the Signature template for use with the Authorization header.
 
@@ -143,13 +153,19 @@ def build_signature_template(key_id, algorithm, headers, sign_header='authorizat
     param_map = {'keyId': key_id,
                  'algorithm': algorithm,
                  'signature': '%s'}
+
+    if created:
+        param_map['created'] = created
+    if expires:
+        param_map['expires'] = expires
+
     if headers:
         headers = [h.lower() for h in headers]
         param_map['headers'] = ' '.join(headers)
     kv = map('{0[0]}="{0[1]}"'.format, param_map.items())
     kv_string = ','.join(kv)
     if sign_header.lower() == 'authorization':
-        return 'Signature {0}'.format(kv_string)
+        return '{0}'.format(kv_string)
 
     return kv_string
 
