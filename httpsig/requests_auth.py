@@ -1,4 +1,7 @@
+from email.utils import formatdate
 import requests.auth
+import base64, hashlib
+import time
 try:
     # Python 3
     from urllib.parse import urlparse
@@ -31,6 +34,13 @@ class HTTPSignatureAuth(requests.auth.AuthBase):
         self.expires = expires
 
     def __call__(self, r):
+        date = r.headers.pop('date', formatdate(self.created, usegmt=True) if self.created else formatdate(time.time(), usegmt=True))
+        r.headers['date'] = date
+
+        if r.body is not None and "digest" in self.header_signer.headers:
+            digest = hashlib.sha256(r.body).digest()
+            r.headers["digest"] = "SHA-256=" + base64.b64encode(digest).decode()
+
         headers = self.header_signer.sign(
                 r.headers,
                 # 'Host' header unavailable in request object at this point

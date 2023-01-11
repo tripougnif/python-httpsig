@@ -47,7 +47,6 @@ class Signer(object):
             assert sign_algorithm is not None, "Required digital signature algorithm not specified"
             self.sign_algorithm = sign_algorithm
 
-        print("sign_algorithm = ", self.sign_algorithm)
         if self.sign_algorithm == 'rsa':
             try:
                 rsa_key = RSA.importKey(secret)
@@ -138,11 +137,10 @@ class HeaderSigner(Signer):
         `method` is the HTTP method (required when using '(request-target)').
         `path` is the HTTP path (required when using '(request-target)').
         """
-        #headers = CaseInsensitiveDict(headers)
+        headers = CaseInsensitiveDict(headers)
         required_headers = self.headers or ['date']
         signable = generate_message(
             required_headers, headers, host, method, path, created, expires)
-        print(signable)
 
         signature = super(HeaderSigner, self).sign(signable)
         headers[self.sign_header] = self.signature_template % signature
