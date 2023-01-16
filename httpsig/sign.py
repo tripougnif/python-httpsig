@@ -28,9 +28,7 @@ class Signer(object):
         if sign_algorithm is not None and not issubclass(type(sign_algorithm), SignAlgorithm):
             raise HttpSigException("Unsupported digital signature algorithm")
 
-        if algorithm != DEFAULT_ALGORITHM:
-            print("Algorithm: {} is deprecated please update to {}".format(algorithm, DEFAULT_ALGORITHM))
-        elif algorithm == DEFAULT_ALGORITHM and sign_algorithm is None:
+        if algorithm == DEFAULT_ALGORITHM and sign_algorithm is None:
             raise HttpSigException("Required sign algorithm for {} algorithm not set".format(DEFAULT_ALGORITHM))
 
         if isinstance(secret, six.string_types):
